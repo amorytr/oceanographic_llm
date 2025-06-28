@@ -149,7 +149,10 @@
       const oldBox = boxPlaceholder.firstChild;
       const newBox = createNewBox();
 
-      // If there's an old box, fade it out
+      const input = secondInput.value || userInput.value; 
+      const apiUrl = "https://your-server.com/api";       
+
+      // Handle box swapping
       if (oldBox) {
         oldBox.style.opacity = 0;
         setTimeout(() => {
@@ -160,14 +163,48 @@
           });
         }, 500);
       } else {
-        // First time: no old box
         boxPlaceholder.appendChild(newBox);
         requestAnimationFrame(() => {
           newBox.style.opacity = 1;
         });
       }
+
+      // Reset input field
       secondInput.value = "";
       secondInput.placeholder = "What else can I help you with?";
+
+      // Optional: show loading while waiting
+      const p = newBox.querySelector("p");
+      if (p) {
+        p.textContent = "Thinking...";
+      }
+
+      // Send API request
+      fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ query: input })
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("HTTP error " + response.status);
+          }
+          return response.json();
+        })
+        .then(data => {
+          const responseText = data.response || "No response received.";
+          if (p) {
+            p.textContent = responseText;
+          }
+        })
+        .catch(error => {
+          console.error("API error:", error);
+          if (p) {
+           p.textContent = "There was an error connecting to the server.";
+          }
+        });
     }
 
     userInput.addEventListener("keydown", function (event) {
