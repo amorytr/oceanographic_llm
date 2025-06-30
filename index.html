@@ -128,6 +128,23 @@
 </head>
 
 <script>
+
+  // User session management: one ID per user per hour
+  const EXPIRATION_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+
+  let uniqueUserId = localStorage.getItem("oceanx_user_id");
+  let idTimestamp = localStorage.getItem("oceanx_user_id_timestamp");
+
+  if (
+    !uniqueUserId ||
+    !idTimestamp ||
+    (Date.now() - parseInt(idTimestamp, 10)) > EXPIRATION_MS
+  ) {
+    uniqueUserId = crypto.randomUUID();
+    localStorage.setItem("oceanx_user_id", uniqueUserId);
+    localStorage.setItem("oceanx_user_id_timestamp", Date.now().toString());
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     const initialContent = document.getElementById("initial-content");
     const expandedContainer = document.getElementById("expanded-container");
@@ -170,7 +187,7 @@
       const newBox = createNewBox();
 
       const input = secondInput.value || userInput.value; 
-      const apiUrl = "https://1ce2-13-58-18-14.ngrok-free.app/ask";       
+      const apiUrl = `https://1ce2-13-58-18-14.ngrok-free.app/ask?unique_id=${encodeURIComponent(uniqueUserId)}`;      
 
       // Handle box swapping
       if (oldBox) {
