@@ -93,10 +93,37 @@
       height: 80%;
     }
 
+    .hidden {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      position: absolute !important;
+    }
+
     #response {
       margin-top: 1rem;
       font-style: italic;
     }
+
+    #initial-content,
+    #expanded-container {
+      transition: opacity 1.25s ease-in-out;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #initial-content.active,
+    #expanded-container.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    
   </style>
 </head>
 
@@ -126,23 +153,16 @@
       return box;
     }
 
-    function transitionToExpanded() {
-      if (!initialized) {
-        initialContent.style.transition = "opacity 0.5s ease";
-        initialContent.style.opacity = 0;
-        setTimeout(() => {
-          initialContent.style.display = "none";
-          expandedContainer.style.display = "block";
-          setTimeout(() => {
-            expandedContainer.style.transition = "opacity 0.5s ease";
-            expandedContainer.style.opacity = 1;
-            initialized = true;
-            swapBox(); // show first bigger box
-          }, 50);
-        }, 500);
-      } else {
-        swapBox();
-      }
+   function transitionToExpanded() {
+      expandedContainer.classList.add("active");
+      expandedContainer.classList.remove("hidden");
+
+      initialContent.classList.remove("active");
+      initialContent.classList.add("hidden");
+
+      document.getElementById("back-button").style.display = "block";
+      initialized = true;
+      swapBox();
     }
 
     function swapBox() {
@@ -224,6 +244,27 @@
     // Expose for inline onclick
     window.transitionToExpanded = transitionToExpanded;
     window.swapBox = swapBox;
+
+    function goBack() {
+      const backButton = document.getElementById("back-button");
+
+      // Clean up
+      userInput.value = "";
+      userInput.placeholder = "Ask me about our oceans. Type here:";
+      boxPlaceholder.innerHTML = "";
+      initialized = false;
+
+      // Begin crossfade
+      expandedContainer.classList.remove("active");
+      expandedContainer.classList.add("hidden"); // fully hides it after fade
+
+      initialContent.classList.add("active");
+      initialContent.classList.remove("hidden");
+
+      backButton.style.display = "none";
+    }
+    window.goBack = goBack;
+
   });
 </script>
 
@@ -233,7 +274,7 @@
     Your browser does not support the video tag.
   </video>
 
-  <div id="initial-content" class="content">
+  <div id="initial-content" class="content active">
     <h1>Let's explore together...</h1>
     <div class="input-wrapper">
       <input type="text" id="userInput" placeholder="Ask me about our oceans. Type here:" />
@@ -241,14 +282,28 @@
     </div>
   </div>
 
-  <div id="expanded-container" class="centered-layout" style="display: none; opacity: 0;">
+  <div id="expanded-container" class="centered-layout hidden">
     <div id="box-placeholder"></div>
-    <div class="input-wrapper" style="margin-top: 2rem; margin-bottom:0.5rem;">
+      <div class="input-wrapper" style="margin-top: 2rem; margin-bottom:0.5rem;">
       <input type="text" id="secondInput" placeholder="What else can I help you with?" />
       <button onclick="swapBox()">➤</button>
     </div>
   </div>
-
+  
+  <div id="back-button" onclick="goBack()" style="
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 6px 10px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 1.75rem;
+  cursor: pointer;
+  z-index: 10;
+  user-select: none;
+">←</div>
   <div style="position: fixed; bottom: 10px; right: 20px; color: white; font-family: 'Vanlose_Booktype'; font-size: 1.2rem; opacity: 0.7;">DEMO VERSION</div>
 
 </body>
