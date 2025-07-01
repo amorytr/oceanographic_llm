@@ -123,6 +123,19 @@
       visibility: visible;
       pointer-events: auto;
     }
+
+    .typing-indicator::after {
+      content: '';
+      animation: dots 2.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%   { content: ''; }
+      25%  { content: '.'; }
+      50%  { content: '..'; }
+      75%  { content: '...'; }
+      100% { content: ''; }
+    }
     
   </style>
 </head>
@@ -213,7 +226,8 @@
       // Optional: show loading while waiting
       const p = newBox.querySelector("p");
       if (p) {
-        p.textContent = "Thinking...";
+        p.textContent = "Thinking";
+        p.classList.add("typing-indicator");
       }
 
       // Send API request
@@ -233,7 +247,8 @@
         .then(data => {
           const responseText = data.results || "No response received.";
           if (p) {
-            p.innerHTML = responseText.replace(/\n/g, "<br>");;
+            p.classList.remove("typing-indicator"); // <-- stop the dot animation
+            p.innerHTML = responseText.replace(/\n/g, "<br>");
           }
         })
         .catch(error => {
@@ -284,6 +299,19 @@
 
   });
 </script>
+
+<div style="
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-family: 'Vanlose_Booktype';
+  font-size: 1.2rem;
+  opacity: 0.7;
+">
+  Powered by multi-agent Retrieval Augmented Generation.
+</div>
 
 <body>
   <video id="bg-video" autoplay muted loop playsinline>
