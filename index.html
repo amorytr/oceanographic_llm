@@ -233,7 +233,7 @@
         .then(data => {
           const responseText = data.results || "No response received.";
           if (p) {
-            p.textContent = responseText;
+            p.innerHTML = responseText.replace(/\n/g, "<br>");;
           }
         })
         .catch(error => {
