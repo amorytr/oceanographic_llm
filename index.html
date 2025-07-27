@@ -200,7 +200,8 @@
       const newBox = createNewBox();
 
       const input = secondInput.value || userInput.value; 
-      const apiUrl = `https://1ce2-13-58-18-14.ngrok-free.app/ask?unique_id=${encodeURIComponent(uniqueUserId)}`;      
+      const apiUrl = `https://1ce2-13-58-18-14.ngrok-free.app/ask?unique_id=${encodeURIComponent(uniqueUserId)}`;  
+      //const apiUrl = `http://127.0.0.1:8000/ask?unique_id=${encodeURIComponent(uniqueUserId)}`;    
 
       // Handle box swapping
       if (oldBox) {
@@ -237,26 +238,29 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ query_string: input })
-      })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("HTTP error " + response.status);
-          }
-          return response.json();
-        })
-        .then(data => {
-          const responseText = data.results || "No response received.";
-          if (p) {
-            p.classList.remove("typing-indicator"); // <-- stop the dot animation
-            p.innerHTML = responseText.replace(/\n/g, "<br>");
-          }
-        })
-        .catch(error => {
-          console.error("API error:", error);
-          if (p) {
-           p.textContent = "There was an error connecting to the server.";
-          }
+      }).then(response => {
+        if (!response.body) throw new Error("ReadableStream not supported");
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        const p = newBox.querySelector("p");
+        p.classList.remove("typing-indicator");
+        p.innerHTML = "";
+
+        function readChunk() {
+          reader.read().then(({ done, value }) => {
+          if (done) return;
+          const text = decoder.decode(value, { stream: true });
+          p.innerHTML += text.replace(/\n/g, "<br>");
+          readChunk();
         });
+      }
+    readChunk();
+    }).catch(error => {
+      console.error("API error:", error);
+      const p = newBox.querySelector("p");
+      p.textContent = "There was an error connecting to the server.";
+    });
     }
 
     userInput.addEventListener("keydown", function (event) {
